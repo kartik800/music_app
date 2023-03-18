@@ -1,6 +1,8 @@
+// imports
 const mongoose = require("mongoose");
 const Joi = require("joi");
 
+// creating song schema
 const songSchema = new mongoose.Schema({
   name: { type: String, required: true },
   artist: { type: String, required: true },
@@ -9,6 +11,7 @@ const songSchema = new mongoose.Schema({
   duration: { type: String, required: true },
 });
 
+// validate song
 const validate = (song) => {
   const schema = Joi.object({
     name: Joi.string().required(),

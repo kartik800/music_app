@@ -23,7 +23,7 @@ const validate = (playlist) => {
     songs: Joi.array().items(Joi.string()),
     img: Joi.string().allow(""),
   });
-  return schema.validate(song);
+  return schema.validate(playlist);
 };
 
 const Playlist = mongoose.model("playlist", playlistSchema);
