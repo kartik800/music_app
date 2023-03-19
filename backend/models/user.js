@@ -12,7 +12,6 @@ const userSchema = new mongoose.Schema({
   gender: { type: String, required: true },
   month: { type: String, required: true },
   date: { type: String, required: true },
-  name: { type: String, required: true },
   year: { type: String, required: true },
   likedSongs: { type: [String], default: [] },
   playlists: { type: [String], default: [] },
