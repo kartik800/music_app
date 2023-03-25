@@ -17,7 +17,7 @@ router.get("/", auth, async (req, res) => {
       name: { $regex: search, $options: "i" },
     }).limit(10);
     const result = { songs, playlists };
-    res.status(200).send({ data: result });
+    res.status(200).send(result);
     // search string is empty
   } else {
     res.status(200).send({});

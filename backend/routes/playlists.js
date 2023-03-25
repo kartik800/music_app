@@ -138,7 +138,7 @@ router.delete("/:id", [validObjectId, auth], async (req, res) => {
   const index = user.playlists.indexOf(req.params.id);
   user.playlists.splice(index, 1);
   await user.save();
-  await playlist.remove();
+  await Playlist.deleteMany(playlist);
   res.status(200).send({ message: "Removed from library" });
 });
 

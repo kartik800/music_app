@@ -1,210 +1,207 @@
 import React, { useState } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
+import Button from "../component/Inputs/Button";
+import Textfield from "../component/Inputs/Textfield";
+import Select from "../component/Inputs/Select";
+import Radio from "../component/Inputs/Radio";
 import { Link, useNavigate } from "react-router-dom";
+import Joi from "joi";
+import passwordComplexity from "joi-password-complexity";
+
+const months = [
+  { name: "January", value: "01" },
+  { name: "February", value: "02" },
+  { name: "March", value: "03" },
+  { name: "Apirl", value: "04" },
+  { name: "May", value: "05" },
+  { name: "June", value: "06" },
+  { name: "July", value: "07" },
+  { name: "Augest", value: "08" },
+  { name: "September", value: "09" },
+  { name: "October", value: "10" },
+  { name: "November", value: "11" },
+  { name: "December", value: "12" },
+];
+
+const genders = ["male", "female", "non-binary"];
 
 const Signup = () => {
-  let navigate = useNavigate();
-  const [credential, setCredential] = useState({
-    name: "",
+  const [data, setData] = useState({
     email: "",
     password: "",
-    gender: "",
+    name: "",
     month: "",
-    date: "",
     year: "",
+    date: "",
+    gender: "",
   });
 
-  const handleChange = async (e) => {
-    setCredential({ ...credential, [e.target.name]: e.target.value });
+  const [isFetching, setIsFetching] = useState(false);
+
+  const navigate = useNavigate();
+  const [errors, setErrors] = useState({});
+
+  const handleInputState = (name, value) => {
+    setData((data) => ({ ...data, [name]: value }));
   };
+  const handleErrorState = (name, value) => {
+    value === ""
+      ? delete errors[name]
+      : setErrors(() => ({ ...errors, [name]: value }));
+  };
+
+  const schema = {
+    email: Joi.string().email({ tlds: false }).required().label("Email"),
+    password: passwordComplexity().required().label("Password"),
+    name: Joi.string().min(5).max(10).required().label("Name"),
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const response = await fetch("http://localhost:8080/api/users", {
-      method: "POST",
-      mode: "cors",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: credential.name,
-        email: credential.email,
-        password: credential.password,
-        gender: credential.gender,
-        month: credential.month,
-        date: credential.date,
-        year: credential.year,
-      }),
-    });
-
-    const json = await response.json();
-    console.log(json);
-    if (response.status === 200) {
-      navigate("/login");
+    if (Object.keys(errors).length === 0) {
+      try {
+        setIsFetching(true);
+        const url = process.env.REACT_APP_API_URL + "/users";
+        await axios.post(url, data);
+        setIsFetching(false);
+        toast.success("Account created successfully");
+        navigate("/login");
+      } catch (error) {
+        setIsFetching(false);
+        if (
+          error.response &&
+          error.response.status >= 400 &&
+          error.response.status < 500
+        ) {
+          toast.error(error.response.data);
+        } else {
+          console.log(error);
+          toast.error("Something went wrong!");
+        }
+      }
+    } else {
+      console.log("please fill out properly");
     }
   };
   return (
-    <div>
-      <div className="flex min-h-full items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="w-full max-w-md space-y-8">
-          <div>
-            <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-              Sign up for an account
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              Or{" "}
-              <Link to="/login">
-                <span className="font-medium text-blue-600 hover:text-blue-500">
-                  Login
-                </span>
-              </Link>
-            </p>
-          </div>
-          <form
-            onSubmit={handleSubmit}
-            className="mt-8 space-y-6"
-            method="POST"
-          >
-            <input type="hidden" name="remember" value="true" />
-            <div className="-space-y-px rounded-md shadow-sm">
-              <div>
-                <label htmlFor="name" className="sr-only">
-                  Name
-                </label>
-                <input
-                  onChange={handleChange}
-                  value={credential.name}
-                  id="name"
-                  name="name"
-                  type="text"
-                  autocomplete="current-password"
-                  required
-                  className="relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                  placeholder="Your Name"
-                />
-              </div>
-              <div>
-                <label htmlFor="email" className="sr-only">
-                  Email address
-                </label>
-                <input
-                  onChange={handleChange}
-                  value={credential.email}
-                  id="email"
-                  name="email"
-                  type="email"
-                  autocomplete="email"
-                  required
-                  className="relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                  placeholder="Email address"
-                />
-              </div>
-              <div>
-                <label htmlFor="password" className="sr-only">
-                  Password
-                </label>
-                <input
-                  onChange={handleChange}
-                  value={credential.password}
-                  id="password"
-                  name="password"
-                  type="password"
-                  autocomplete="current-password"
-                  required
-                  className="relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                  placeholder="Password"
-                />
-              </div>
-              <div>
-                <label htmlFor="gender" className="sr-only">
-                  Gender
-                </label>
-                <input
-                  onChange={handleChange}
-                  value={credential.gender}
-                  id="gender"
-                  name="gender"
-                  type="text"
-                  autocomplete="current-password"
-                  required
-                  className="relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                  placeholder="male, female, non-binary"
-                />
-              </div>
-              <div>
-                <label htmlFor="month" className="sr-only">
-                  Month
-                </label>
-                <input
-                  onChange={handleChange}
-                  value={credential.month}
-                  id="month"
-                  name="month"
-                  type="text"
-                  autocomplete="current-password"
-                  required
-                  className="relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                  placeholder="month"
-                />
-              </div>
-              <div>
-                <label htmlFor="date" className="sr-only">
-                  Date
-                </label>
-                <input
-                  onChange={handleChange}
-                  value={credential.date}
-                  id="date"
-                  name="date"
-                  type="text"
-                  autocomplete="current-password"
-                  required
-                  className="relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                  placeholder="date"
-                />
-              </div>
-              <div>
-                <label htmlFor="year" className="sr-only">
-                  Year
-                </label>
-                <input
-                  onChange={handleChange}
-                  value={credential.year}
-                  id="year"
-                  name="year"
-                  type="text"
-                  autocomplete="current-password"
-                  required
-                  className="relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                  placeholder="Year"
-                />
-              </div>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                className="group relative flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                  <svg
-                    className="h-5 w-5 text-blue-500 group-hover:text-blue-400"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      fill-rule="evenodd"
-                      d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z"
-                      clip-rule="evenodd"
-                    />
-                  </svg>
-                </span>
-                Sign up
-              </button>
-            </div>
-          </form>
+    <>
+      <div className="flex w-full flex-col items-center absolute top-0 left-0 px-[4rem] py-0">
+        <div className="w-[14rem] mb-[1rem]">
+          <img src="" alt="" />
         </div>
+        {/* <h1 text-5xl font-bold mb-12>
+          Signup For free to start listening
+        </h1>
+        <Button
+          label="Sign up with facebook"
+          style={{ background: "#1877f2", color: "white" }}
+        ></Button>
+        <p className="text-xl">Or</p> */}
+        <form onSubmit={handleSubmit} className="flex flex-col">
+          <h2 className="text-[1.8rem] leading-[2.6rem] text-center mt-0">
+            Signup With your email
+          </h2>
+          <div className="w-[45rem] mx-0 my-2">
+            <Textfield
+              label="What's your email"
+              placeholder="Enter your email"
+              name="email"
+              handleInputState={handleInputState}
+              schema={schema.email}
+              handleErrorState={handleErrorState}
+              value={data.email}
+              error={errors.email}
+              required={true}
+            />
+          </div>
+          <div className="w-[45rem] mx-0 my-2">
+            <Textfield
+              label="Create a password"
+              placeholder="Create a password"
+              name="password"
+              handleInputState={handleInputState}
+              schema={schema.password}
+              handleErrorState={handleErrorState}
+              value={data.password}
+              error={errors.password}
+              type="password"
+              required={true}
+            />
+          </div>
+          <div className="w-[45rem] mx-0 my-2">
+            <Textfield
+              label="What should we call you?"
+              placeholder="Enter a profile name"
+              name="name"
+              handleInputState={handleInputState}
+              schema={schema.name}
+              handleErrorState={handleErrorState}
+              value={data.name}
+              error={errors.name}
+              required={true}
+            />
+          </div>
+          <div className="flex flex-col w-[45rem] mx-0 my-2">
+            <p className="font-medium text-[1.4rem] mx-0 my-2">
+              What's your date of birth?
+            </p>
+            <div className="flex items-center justify-between w-full">
+              <div className=" w-[20%]">
+                <Select
+                  name="month"
+                  handleInputState={handleInputState}
+                  label="Month"
+                  placeholder="Months"
+                  options={months}
+                  value={data.month}
+                  required={true}
+                />
+              </div>
+              <div className=" w-1/5">
+                <Textfield
+                  label="Date"
+                  placeholder="DD"
+                  name="date"
+                  value={data.date}
+                  handleInputState={handleInputState}
+                  required={true}
+                />
+              </div>
+              <div className="w-[20%]">
+                <Textfield
+                  label="Year"
+                  placeholder="YYYY"
+                  name="year"
+                  value={data.year}
+                  handleInputState={handleInputState}
+                  required={true}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="w-[45rem] mx-0 my-2">
+            <Radio
+              label="What's your gender?"
+              name="gender"
+              handleInputState={handleInputState}
+              options={genders}
+              required={true}
+            />
+          </div>
+          <div className="flex items-center justify-center w-[45rem] mt-2 mb-0 mx-0">
+            <Button label="Sign Up" type="submit" isFetching={isFetching} />
+          </div>
+          <p
+            className="w-[45rem] text-[1rem] leading-[1.8rem] font-sm text-center mx-0 my-[0.8rem]"
+            style={{ fontSize: "1.6rem" }}
+          >
+            Have an account? <Link to="/login"> Log in.</Link>
+          </p>
+        </form>
       </div>
-    </div>
+    </>
   );
 };
 

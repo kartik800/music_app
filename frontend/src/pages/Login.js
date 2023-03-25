@@ -1,139 +1,92 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { login } from "../redux/authSlice/apiCalls";
+import Textfield from "../component/Inputs/Textfield";
+import CheckboxInput from "../component/Inputs/Checkbox";
+import Button from "../component/Button";
+import { Link } from "react-router-dom";
+import Joi from "joi";
 
 const Login = () => {
-  let navigate = useNavigate();
-  const [credential, setCredential] = useState({
-    email: "",
-    password: "",
-  });
+  const [data, setData] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState({});
+  const { isFetching } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
 
-  const handleChange = async (e) => {
-    setCredential({ ...credential, [e.target.name]: e.target.value });
+  const handleInputState = (name, value) => {
+    setData({ ...data, [name]: value });
   };
+
+  const handleErrorState = (name, value) => {
+    value === ""
+      ? delete errors[name]
+      : setErrors({ ...errors, [name]: value });
+  };
+
+  const schema = {
+    email: Joi.string().email({ tlds: false }).required().label("Email"),
+    password: Joi.string().required().label("Password"),
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const response = await fetch("http://localhost:8080/api/login", {
-      method: "POST",
-      mode: "cors",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: credential.email,
-        password: credential.password,
-      }),
-    });
-
-    const json = await response.json();
-    console.log(json);
-    if (response.status === 200) {
-      localStorage.setItem("authToken", json.data);
-      //   console.log(localStorage.getItem("authToken"));
-      navigate("/main");
+    if (Object.keys(errors).length === 0) {
+      login(data, dispatch);
+    } else {
+      console.log("please fill out properly");
     }
   };
-
   return (
-    <div>
-      <div className="flex min-h-full items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="w-full max-w-md space-y-8">
-          <div>
-            <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-              Log in to your account
-            </h2>
-            <p className="mt-2 text-center text-sm text-gray-600">
-              Or{" "}
-              <Link to="/signup">
-                <span className="font-medium text-blue-600 hover:text-blue-500">
-                  Signup
-                </span>
-              </Link>
-            </p>
-          </div>
-          <form
-            onSubmit={handleSubmit}
-            className="mt-8 space-y-6"
-            method="POST"
-          >
-            <input type="hidden" name="remember" value="true" />
-            <div className="-space-y-px rounded-md shadow-sm">
-              <div>
-                <label htmlFor="email" className="sr-only">
-                  Email address
-                </label>
-                <input
-                  onChange={handleChange}
-                  value={credential.email}
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className="relative block w-full appearance-none rounded-none rounded-t-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                  placeholder="Email address"
-                />
-              </div>
-              <div>
-                <label htmlFor="password" className="sr-only">
-                  Password
-                </label>
-                <input
-                  onChange={handleChange}
-                  value={credential.password}
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  className="relative block w-full appearance-none rounded-none rounded-b-md border border-gray-300 px-3 py-2 text-gray-900 placeholder-gray-500 focus:z-10 focus:border-blue-500 focus:outline-none focus:ring-blue-500 sm:text-sm"
-                  placeholder="Password"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <label
-                  htmlFor="remember-me"
-                  className="ml-2 block text-sm text-gray-900"
-                >
-                  Remember me
-                </label>
-              </div>
-            </div>
-
-            <div>
-              <button
-                type="submit"
-                className="group relative flex w-full justify-center rounded-md border border-transparent bg-blue-600 py-2 px-4 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-              >
-                <span className="absolute inset-y-0 left-0 flex items-center pl-3">
-                  <svg
-                    className="h-5 w-5 text-blue-500 group-hover:text-blue-400"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </span>
-                Log In
-              </button>
-            </div>
-          </form>
+    <div className="flex flex-col w-full items-center pb-2">
+      <form onSubmit={handleSubmit} className="flex flex-col">
+        <div className="w-full mx-0 my-2">
+          <Textfield
+            label="Enter your email"
+            placeholder="Enter your email"
+            name="email"
+            handleInputState={handleInputState}
+            schema={schema.email}
+            handleErrorState={handleErrorState}
+            value={data.email}
+            error={errors.email}
+            required={true}
+          />
         </div>
-      </div>
+        <div className="w-full mx-0 my-2">
+          <Textfield
+            label="Password"
+            placeholder="Password"
+            name="password"
+            handleInputState={handleInputState}
+            schema={schema.password}
+            handleErrorState={handleErrorState}
+            value={data.password}
+            error={errors.password}
+            type="password"
+            required={true}
+          />
+        </div>
+        <p className="text-[color:var(--dark-green)] underline text-[1rem] font-normal cursor-pointer mx-0 my-1">
+          Forgot your password?
+        </p>
+        <div className="flex w-full items-center justify-between border-b-[color:var(--light-gray)] px-0 py-6 border-b-[0.1rem] border-solid">
+          <CheckboxInput label="Remember me" />
+          <Button
+            type="submit"
+            label="LOG IN"
+            isFetching={isFetching}
+            style={{ color: "white", background: "#0000FF", width: "20rem" }}
+          />
+        </div>
+      </form>
+      <h1 className="text-center text-[1.2rem] mt-5 mb-4">
+        Don't have an account?
+      </h1>
+      <Link to="/signup">
+        <button className="w-full h-10 border-[color:var(--gray)] flex items-center justify-center text-[1.5rem] font-semibold tracking-[2px] uppercase text-[color:var(--light-gray)] cursor-pointer transition-all duration-[ease] delay-[0.5s] mx-0 my-2 rounded-[50rem] border-2 border-solid outline-none bg-transparent">
+          sign up
+        </button>
+      </Link>
     </div>
   );
 };
